@@ -312,7 +312,7 @@ async function importCharacter(actor, data) {
     });
     Object.values(CONTACT_RELATIONSHIP_TYPES).forEach(name => {
         if (lifepath[name]) {
-            return lifepath[name] = lifepath[name].join('\n\n'');
+            return lifepath[name] = lifepath[name].join('\n\n');
         }
     })
 
