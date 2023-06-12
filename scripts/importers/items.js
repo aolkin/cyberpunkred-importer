@@ -1,18 +1,23 @@
 const DATABASE_IDS = {
-    "clothing": "cyberpunk-red-core.clothing-items",
-    "armor": "cyberpunk-red-core.armor-items",
-    "gear": "cyberpunk-red-core.gear-items",
-    "program": "cyberpunk-red-core.programs-items",
-    "weapon": "cyberpunk-red-core.weapons-items",
-    "ammunition": "cyberpunk-red-core.ammo-items",
-    "cybergear": "cyberpunk-red-core.cyberware-items",
+    "clothing": "cyberpunk-red-core.clothing",
+    "armor": "cyberpunk-red-core.armor",
+    "gear": "cyberpunk-red-core.gear",
+    "program": "cyberpunk-red-core.programs",
+    "weapon": "cyberpunk-red-core.weapons",
+    "ammunition": "cyberpunk-red-core.ammo",
+    "cybergear": "cyberpunk-red-core.cyberware",
 }
 
 const databases = {};
 
 export async function loadItemDatabases() {
     await Promise.all(Object.entries(DATABASE_IDS).map(async ([databaseId, databaseName]) => {
-       databases[databaseId] = await game.packs.get(databaseName).getIndex();
+        const pack = game.packs.get(databaseName);
+        if (pack) {
+            databases[databaseId] = await pack.getIndex();
+        } else {
+            ui.notifications.error(`CPR Importer failed to load ${databaseName} compendium pack!`);
+        }
     }));
 }
 
