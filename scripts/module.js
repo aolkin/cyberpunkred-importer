@@ -87,10 +87,22 @@ async function importCharacter(data, actor) {
     }
     console.info('Importing character', data, 'to actor', actor);
 
-    await updateLifepath(data, actor);
-    await updateSkills(data, actor);
-    await importItems(data, actor);
-    await updateStats(data, actor);
+    const forWhom = `${data.name} from ${data.code_to_character}`;
 
-    ui.notifications.info(`Done importing character ${data.name} from ${data.code_to_character}.`);
+    try {
+        await updateLifepath(data, actor);
+        ui.notifications.info(`Importing skills for ${forWhom}.`);
+        await updateSkills(data, actor);
+        ui.notifications.info(`Importing items for ${forWhom}.`);
+        await importItems(data, actor);
+        // Do this last to overwrite humanity and empathy lost during cyberware installs
+        await updateStats(data, actor);
+    } catch (e) {
+        const errorMessage = `Failed to import ${forWhom}.`;
+        ui.notifications.error(errorMessage);
+        console.log(errorMessage, e);
+    }
+
+    ui.notifications.info(`Done importing character ${forWhom}. Max Humanity and Empathy may need
+     to be manually corrected.`);
 }

@@ -13,10 +13,10 @@ const LIFEPATH_FIELDS = {
     valuedPossession: /Valued Possession/i
 }
 const CONTACT_RELATIONSHIP_TYPES = {
+    0: "friends",
     1: "enemies",
     2: "friends",
     3: "tragicLoveAffairs",
-    4: "friends",
 }
 
 export async function updateLifepath(data, actor) {
@@ -44,15 +44,19 @@ export async function updateLifepath(data, actor) {
             text += ` (${contact.organization}${position})`;
         }
         if (contact.details) {
-            text += '\n' + contact.details;
+            text = `<b>${text}</b>\n` + contact.details;
         }
         const relationshipType = CONTACT_RELATIONSHIP_TYPES[contact.contact_type_id]
+        if (!relationshipType) {
+            ui.notifications.warn(`Unknown relationship type (${contact.contact_type_id}) for ${contact.name}`);
+            return;
+        }
         if (!lifepath[relationshipType]) {
             lifepath[relationshipType] = [];
         }
         lifepath[relationshipType].push(text);
     });
-    Object.values(CONTACT_RELATIONSHIP_TYPES).forEach(name => {
+    new Set(Object.values(CONTACT_RELATIONSHIP_TYPES)).forEach(name => {
         if (lifepath[name]) {
             return lifepath[name] = lifepath[name].join('\n\n');
         }

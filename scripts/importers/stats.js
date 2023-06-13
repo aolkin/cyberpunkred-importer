@@ -23,7 +23,7 @@ export async function updateStats(data, actor) {
 
     const derivedStats = {
         hp: { value: data.health, max: data.health },
-        humanity: { value: data.humanity }
+        humanity: { value: data.humanity, max: data.humanity }
     };
 
     console.debug('Updating stats', stats, derivedStats);

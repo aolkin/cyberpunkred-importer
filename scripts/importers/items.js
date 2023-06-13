@@ -47,7 +47,7 @@ const CLOTHING_PIECES = [
     "Mirrorshades",
     "Glasses",
     "Contact Lenses",
-    "Hats",
+    "Hat",
 ]
 
 const ARMOR_TYPES = [
