@@ -20,7 +20,10 @@
     "systems": [
       {
         "id": "cyberpunk-red-core",
-        "type": "system"
+        "type": "system",
+        "compatibility": {
+          "verified": "0.87.1",
+        }
       }
     ],
     "requires": []
@@ -28,9 +31,6 @@
   "system": ["cyberpunk-red-core"],
   "esmodules": [
     "scripts/module.js"
-  ],
-  "scripts": [
-    "scripts/lib/lib.js"
   ],
   "styles": [
     "styles/module.css"
