@@ -58,7 +58,7 @@ export async function updateLifepath(data, actor) {
         }
     })
 
-    Object.keys(lifepath).forEach(key => lifepath[key] = lifepath[key].replaceAll('\n', '<br>'));
+    Object.keys(lifepath).forEach(key => lifepath[key] = (lifepath[key] ?? '').replaceAll('\n', '<br>'));
 
     console.debug('Updating lifepath and name', lifepath);
     await actor.update({
