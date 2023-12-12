@@ -7,8 +7,8 @@
   "manifestPlusVersion": "1.2.0",
   "compatibility": {
     "minimum": 10,
-    "verified": 10,
-    "maximum": 10
+    "verified": 11,
+    "maximum": 11
   },
   "authors": [
     {
@@ -22,7 +22,7 @@
         "id": "cyberpunk-red-core",
         "type": "system",
         "compatibility": {
-          "verified": "0.87.1",
+          "verified": "0.88.2"
         }
       }
     ],

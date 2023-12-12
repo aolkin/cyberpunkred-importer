@@ -1,11 +1,12 @@
 const DATABASE_IDS = {
-    "clothing": "cyberpunk-red-core.clothing",
-    "armor": "cyberpunk-red-core.armor",
-    "gear": "cyberpunk-red-core.gear",
-    "program": "cyberpunk-red-core.programs",
-    "weapon": "cyberpunk-red-core.weapons",
-    "ammunition": "cyberpunk-red-core.ammo",
-    "cybergear": "cyberpunk-red-core.cyberware",
+    "clothing": "cyberpunk-red-core.core_clothing",
+    "armor": "cyberpunk-red-core.core_armor",
+    "gear": "cyberpunk-red-core.core_gear",
+    "program": "cyberpunk-red-core.core_programs",
+    "weapon": "cyberpunk-red-core.core_weapons",
+    "ammunition": "cyberpunk-red-core.core_ammo",
+    "cybergear": "cyberpunk-red-core.core_cyberware",
+    "cyberchairs": "cyberpunk-red-core.dlc_cyberchairs",
 }
 
 const databases = {};
@@ -223,14 +224,14 @@ const AMMO_TYPES = {
     "4": "Rifle (Basic)",
     "5": "Shotgun Shell (Basic)",
     "6": "Arrow (Basic)",
-    "7": "Medium Pistol (Armor Piercing)",
-    "8": "Heavy Pistol (Armor Piercing)",
-    "9": "Very Heavy Pistol (Armor Piercing)",
-    "10": "Shotgun Slug (Armor Piercing)",
-    "11": "Rifle (Armor Piercing)",
-    "12": "Arrow (Armor Piercing)",
-    "13": "Grenade (Armor Piercing)",
-    "14": "Rocket (Armor Piercing)",
+    "7": "Medium Pistol (Armor-Piercing)",
+    "8": "Heavy Pistol (Armor-Piercing)",
+    "9": "Very Heavy Pistol (Armor-Piercing)",
+    "10": "Shotgun Slug (Armor-Piercing)",
+    "11": "Rifle (Armor-Piercing)",
+    "12": "Arrow (Armor-Piercing)",
+    "13": "Grenade (Armor-Piercing)",
+    "14": "Rocket (Armor-Piercing)",
     "15": "Arrow (Biotoxin)",
     "16": "Grenade (Biotoxin)",
     "17": "Grenade (EMP)",
@@ -386,6 +387,10 @@ async function importItemData(data, actor, databaseName, getItemName) {
         if (!itemName) {
             ui.notifications.error(`Failed to import unknown ${databaseName}`);
             return;
+        }
+
+        if (itemName.includes("Cyberchair")) {
+            databaseName = "cyberchairs";
         }
 
         const existingItem = actor.items.getName(itemName);

@@ -100,7 +100,7 @@ async function importCharacter(data, actor) {
     } catch (e) {
         const errorMessage = `Failed to import ${forWhom}.`;
         ui.notifications.error(errorMessage);
-        console.log(errorMessage, e);
+        console.error(errorMessage, e);
     }
 
     ui.notifications.info(`Done importing character ${forWhom}. Max Humanity and Empathy may need

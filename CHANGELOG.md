@@ -1,4 +1,9 @@
 
+v0.3.0
+==========
+
+Compatibility with Foundry v11 and CPR System 0.88.2.
+
 v0.2.3
 ==========
 
