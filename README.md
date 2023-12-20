@@ -1,10 +1,8 @@
-![](https://img.shields.io/badge/Foundry-v10-informational)
+![](https://img.shields.io/badge/Foundry-v11-informational)
 <!--- Downloads @ Latest Badge -->
-<!--- ![Latest Release Download Count](https://img.shields.io/github/downloads/aolkin/cyberpunkred-importer/latest/module.zip) -->
-
+![Latest Release Download Count](https://img.shields.io/github/downloads/aolkin/cyberpunkred-importer/latest/module.zip)
 <!--- Forge Bazaar Install % Badge -->
-<!--- replace <your-module-name> with the `name` in your manifest -->
-<!--- ![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fcyberpunkred-importer&colorB=4aa94a) -->
+![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fcyberpunkred-importer&colorB=4aa94a)
 
 # Cyberpunk RED Importer
 
@@ -39,7 +37,9 @@ issue against this project.
 
 ## Install
 
-For now, paste https://github.com/aolkin/cyberpunkred-importer/releases/latest/download/module.json into the "Install Module" dialog to get started.
+Find this in the Foundry module browser or paste
+https://github.com/aolkin/cyberpunkred-importer/releases/latest/download/module.json
+into the "Install Module" dialog to get started.
 
 ## Changelog
 

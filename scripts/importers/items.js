@@ -322,7 +322,7 @@ const CYBERWARE_TYPES = {
     "46": "Enhanced Antibodies",
     "47": "Cybersnake",
     "48": "Gills",
-    "49": "Grafted Muscle Bone Lace",
+    "49": "Grafted Muscle and Bone Lace",
     "50": "Independent Air Supply",
     "51": "Midnight Lady Sexual Implant",
     "52": "Mr. Studd Sexual Implant",
