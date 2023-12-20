@@ -23,6 +23,10 @@ Capabilities:
 - Import items such as clothing, gear, weapons, armor, and ammo
 - Import and install cybergear (the importer will pop up the installation
   prompt for each item)
+- Import NPCs to Mook Actors. NOTE: This functionality should be considered in
+  beta as it has not been thoroughly tested and may break your Mooks. PLEASE
+  make a copy of an existing Mook before trying to run an import on it, as
+  the Mook may become corrupted and unusable if the import fails.
 
 Issues:
 - Only content from the core rulebook is supported, no DLC will be recognized.

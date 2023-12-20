@@ -9,7 +9,7 @@ import { importItems, loadItemDatabases } from "./importers/items.js"
 
 const CHARACTER_TYPE_MAP = {
     0: 'Character',
-    1: 'NPC',
+    1: 'NPC (BETA - data corruption may result)',
 }
 
 Hooks.once('ready', async function() {

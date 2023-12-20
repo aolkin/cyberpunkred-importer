@@ -1,3 +1,10 @@
+v0.3.1
+=========
+
+- Fix typo preventing import of Grafted Muscle and Bone Lace
+- Fix *some* bugs that were preventing successful Mook import. NPC importing
+  should be considered in Beta at this time, as it has not been fully tested
+  and may corrupt actors and existing data.
 
 v0.3.0
 ==========
