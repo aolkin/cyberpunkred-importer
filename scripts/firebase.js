@@ -22,21 +22,21 @@ function parseFirebase(data) {
     const keys = isArray ? data.map((o, i) => i) : Object.keys(data);
     return keys.reduce((acc, key) => {
         const value = data[key];
-        if (value.stringValue) {
+        if ('stringValue' in value) {
             acc[key] = value.stringValue;
-        } else if (value.booleanValue) {
+        } else if ('booleanValue' in value) {
             acc[key] = value.booleanValue;
-        } else if (value.integerValue) {
+        } else if ('integerValue' in value) {
             acc[key] = Number.parseInt(value.integerValue);
-        } else if (value.floatValue) {
+        } else if ('floatValue' in value) {
             acc[key] = Number.parseFloat(value.floatValue);
-        } else if (value.arrayValue) {
+        } else if ('arrayValue' in value) {
             if (value.arrayValue.values) {
                 acc[key] = parseFirebase(value.arrayValue.values);
             } else {
                 acc[key] = [];
             }
-        } else if (value.mapValue) {
+        } else if ('mapValue' in value) {
             acc[key] = parseFirebase(value.mapValue.fields);
         }
         return acc;

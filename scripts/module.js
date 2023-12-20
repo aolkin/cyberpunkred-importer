@@ -7,6 +7,11 @@ import { importItems, loadItemDatabases } from "./importers/items.js"
 // Hooks.once('init', async function() {
 // });
 
+const CHARACTER_TYPE_MAP = {
+    0: 'Character',
+    1: 'NPC',
+}
+
 Hooks.once('ready', async function() {
     await loadItemDatabases();
 });
@@ -61,7 +66,8 @@ function startImport(sheet) {
                         const characterData = await loadCharacter(code);
                         button.data('characterData', characterData);
                         button.prop('disabled', false);
-                        nameDisplay.text(`Character to Import: ${characterData.name}`);
+                        const characterType = CHARACTER_TYPE_MAP[characterData.character_type_id];
+                        nameDisplay.text(`${characterType} to Import: ${characterData.name}`);
                     } catch (e) {
                         nameDisplay.text(e);
                         nameDisplay.addClass('invalid-code');

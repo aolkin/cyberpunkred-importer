@@ -64,9 +64,27 @@ export async function updateLifepath(data, actor) {
 
     Object.keys(lifepath).forEach(key => lifepath[key] = (lifepath[key] ?? '').replaceAll('\n', '<br>'));
 
+    const system = {};
+    if (data.character_type_id === 0) {
+        system.lifepath = lifepath;
+    } else if (data.character_type_id === 1) {
+        const notes = Object.entries({
+            'Personality': data.personality,
+            'Motivation': data.motivation,
+            'Identifying Features': data.identifying_features,
+            'Background': data.background
+        }).map(([k, v]) => v ? `<p><b>${k}:</b><br>${v.replace('\n', '<br>')}</p>` : '').join('');
+        system.information = {
+            alias: data.handle,
+            notes,
+        };
+    } else {
+        ui.notifications.warn(`Unknown character type (${data.character_type_id}) for ${data.name}`);
+    }
+
     console.debug('Updating lifepath and name', lifepath);
     await actor.update({
-        system: { lifepath },
+        system,
         name: `${data.handle} (${data.name})`
     });
 }
