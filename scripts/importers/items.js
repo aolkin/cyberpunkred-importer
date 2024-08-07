@@ -83,7 +83,7 @@ const GEAR_TYPES = {
     "9": "Binoculars",
     "10": "Braindance Viewer",
     "11": "Bug Detector",
-    "12": "Carryall Bag",
+    "12": "Carryall",
     "13": "Chemical Analyzer",
     "14": "Computer",
     "15": "Disposable Cell Phone",
