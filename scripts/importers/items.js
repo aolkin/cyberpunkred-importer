@@ -293,7 +293,7 @@ const CYBERWARE_TYPES = {
     "17": "Skill Chip",
     "18": "Tactile Boost",
     "19": "Cybereye",
-    "20": "Anti Dazzle",
+    "20": "Anti-Dazzle",
     "21": "Chyron",
     "22": "Color Shift",
     "23": "Dartgun",
