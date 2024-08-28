@@ -1,5 +1,12 @@
-.character-import-name {
-    min-height: 4em;
+.character-import-text {
+    min-height: 5em;
+    margin-bottom: 1em;
+}
+
+.character-import-message {
+    font-size: 0.8rem;
+    font-style: italic;
+    text-align: center;
 }
 
 .character-import-name.invalid-code {

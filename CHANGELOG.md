@@ -1,3 +1,11 @@
+v0.3.2
+=========
+
+- Fix names of a couple items.
+- Workaround issue with Mook importing by setting the actor to use the
+  Character sheet during the import process and then restoring it at
+  the end. Mook importing should hopefully work now!
+
 v0.3.1
 =========
 

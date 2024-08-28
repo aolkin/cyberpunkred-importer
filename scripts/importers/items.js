@@ -467,7 +467,7 @@ export async function importItems(data, actor) {
     for (let foundational of foundationalCyberware) {
         await actor.installCyberware(foundational._id);
         try {
-            await waitForInstall(foundational, 1500);
+            await waitForInstall(foundational, 3000);
         } catch (e) {
             ui.notifications.warn(`${foundational.name} may not have been fully installed`);
         }

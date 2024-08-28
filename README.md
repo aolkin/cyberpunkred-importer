@@ -23,13 +23,16 @@ Capabilities:
 - Import items such as clothing, gear, weapons, armor, and ammo
 - Import and install cybergear (the importer will pop up the installation
   prompt for each item)
-- Import NPCs to Mook Actors. NOTE: This functionality should be considered in
-  beta as it has not been thoroughly tested and may break your Mooks. PLEASE
-  make a copy of an existing Mook before trying to run an import on it, as
-  the Mook may become corrupted and unusable if the import fails.
+- Import NPCs to Mook Actors. This should be considered mostly functional now,
+  but note that the importer will override the Mook sheet class to the player
+  Character sheet class during the import, then restore it afterwards, to
+  workaround a limitation in the CPR system implementation.
 
 Issues:
 - Only content from the core rulebook is supported, no DLC will be recognized.
+  Because the DLC content is paywalled and not part of the website, I cannot
+  add the appropriate identifiers to this module to recognize that content
+  without the help of the developer of the app.
 - No custom skills or items will be imported at this time.
 - Lifepath importing involves a lot of string parsing, so it relies on not
   having modified the structure of the lifepath text box on cyberpunkred.com.
