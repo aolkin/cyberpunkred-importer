@@ -35,7 +35,7 @@ Hooks.on('getActorSheetHeaderButtons', getActorSheetHeaderButtons)
 function isUsingMookSheet(actor) {
     console.log(actor.id, actor.flags.core);
     const currentSheetClass = actor?.flags?.core?.sheetClass ||
-        game.settings.get("core", "sheetClasses")?.Actor?.mook;
+        game.settings.get("core", "sheetClasses")?.Actor?.[actor.type];
     return currentSheetClass === 'cyberpunk-red-core.CPRMookActorSheet';
 }
 

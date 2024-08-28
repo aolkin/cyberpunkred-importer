@@ -1,3 +1,9 @@
+v0.3.3
+=========
+
+- Fix a bug in v0.3.2 where Character sheets would be incorrectly
+  recognized as Mook sheets when no override was present.
+
 v0.3.2
 =========
 
