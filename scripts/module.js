@@ -12,6 +12,17 @@ const CHARACTER_TYPE_MAP = {
     1: 'NPC',
 }
 
+function isV2Character(character) {
+    return character.version === 2
+}
+
+function getCharacterType(character) {
+    if (isV2Character(character)) {
+        return character.characterType;
+    }
+    return CHARACTER_TYPE_MAP[character.character_type_id];
+}
+
 Hooks.once('ready', async function() {
     await loadItemDatabases();
 });
@@ -33,7 +44,6 @@ function getActorSheetHeaderButtons(sheet, buttons) {
 Hooks.on('getActorSheetHeaderButtons', getActorSheetHeaderButtons)
 
 function isUsingMookSheet(actor) {
-    console.log(actor.id, actor.flags.core);
     const currentSheetClass = actor?.flags?.core?.sheetClass ||
         game.settings.get("core", "sheetClasses")?.Actor?.[actor.type];
     return currentSheetClass === 'cyberpunk-red-core.CPRMookActorSheet';
@@ -86,17 +96,26 @@ function startImport(sheet) {
                         const characterData = await loadCharacter(code);
                         button.data('characterData', characterData);
                         button.prop('disabled', false);
-                        const characterType = CHARACTER_TYPE_MAP[characterData.character_type_id];
+                        const characterType = getCharacterType(characterData);
                         nameDisplay.text(`${characterType} to Import: ${characterData.name}`);
+
+                        const importMessages = [];
+                        if (isV2Character(characterData)) {
+                            importMessages.push('This character was exported from the updated app.' +
+                                ' This update uses a new data model for which support is still in' +
+                                ' development. Importing items such as clothing,' +
+                                ' weapons, cyberware, etc, is not yet supported.');
+                        }
                         if (isUsingMookSheet(sheet.object)) {
-                            html.find('.character-import-message').text(
+                            importMessages.push(
                                 'This actor is currently using the Mook sheet. In order to import' +
                                 ' successfully, this actor will be temporarily set to use the player' +
-                                ' character sheet during the import process then restored at the end.')
-                        } else {
-                            html.find('.character-import-message').html('&nbsp;');
+                                ' character sheet during the import process then restored at the end.');
                         }
+                        html.find('.character-import-message').html(
+                            importMessages.length > 0 ? importMessages.join('<br>') : '&nbsp;');
                     } catch (e) {
+                        console.error(e);
                         nameDisplay.text(e);
                         nameDisplay.addClass('invalid-code');
                         button.prop('disabled', true);
@@ -131,15 +150,20 @@ async function importCharacter(data, actor) {
     }
 
     const forWhom = `${data.name} from ${data.code_to_character}`;
+    const isV2 = isV2Character(data);
 
     try {
         await updateLifepath(data, actor);
         ui.notifications.info(`Importing skills for ${forWhom}.`);
-        await updateSkills(data, actor);
-        ui.notifications.info(`Importing items for ${forWhom}.`);
-        await importItems(data, actor);
+        await updateSkills(data, actor, isV2);
+        if (isV2) {
+            ui.notifications.warn("Clothing, gear, cyberware, etc imports not yet supported from new characters.")
+        } else {
+            ui.notifications.info(`Importing items for ${forWhom}.`);
+            await importItems(data, actor, isV2);
+        }
         // Do this last to overwrite humanity and empathy lost during cyberware installs
-        await updateStats(data, actor);
+        await updateStats(data, actor, isV2);
     } catch (e) {
         const errorMessage = `Failed to import ${forWhom}.`;
         ui.notifications.error(errorMessage);

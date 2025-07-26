@@ -71,14 +71,103 @@ const SKILL_TYPE_MAP = {
     70: "Medical Tech"
 }
 
-export async function updateSkills(data, actor) {
-    await Promise.all(data.skill.map(async (skillData) => {
+const SKILL_NAME_MAP_V2 = {
+    "Accounting": "Accounting",
+    "Acting": "Acting",
+    "AirVehicleTech": "Air Vehicle Tech",
+    "AnimalHandling": "Animal Handling",
+    "Archery": "Archery",
+    "Athletics": "Athletics",
+    "Autofire": "Autofire",
+    "BasicTech": "Basic Tech",
+    "Brawling": "Brawling",
+    "Bribery": "Bribery",
+    "Bureaucracy": "Bureaucracy",
+    "Business": "Business",
+    "Composition": "Composition",
+    "ConcealRevealObject": "Conceal/Reveal Object",
+    "Concentration": "Concentration",
+    "Contortionist": "Contortionist",
+    "Conversation": "Conversation",
+    "Criminology": "Criminology",
+    "Cryptography": "Cryptography",
+    "Cybertech": "Cybertech",
+    "Dance": "Dance",
+    "Deduction": "Deduction",
+    "Demolitions": "Demolitions",
+    "DriveLandVehicle": "Drive Land Vehicle",
+    "Education": "Education",
+    "ElectronicsSecurityTech": "Electronics/Security Tech",
+    "Endurance": "Endurance",
+    "Evasion": "Evasion",
+    "FirstAid": "First Aid",
+    "Forgery": "Forgery",
+    "Gamble": "Gamble",
+    "Handgun": "Handgun",
+    "HeavyWeapons": "Heavy Weapons",
+    "HumanPerception": "Human Perception",
+    "Interrogation": "Interrogation",
+    "LandVehicleTech": "Land Vehicle Tech",
+    "Language": "Language (Streetslang)",
+    "LibrarySearch": "Library Search",
+    "LipReading": "Lip Reading",
+    "LocalExpert": "Local Expert",
+    "MartialArts": "Martial Arts",
+    "MedicalTech": "Medical Tech",
+    "MeleeWeapon": "Melee Weapon",
+    "PaintDrawSculpt": "Paint/Draw/Sculpt",
+    "Paramedic": "Paramedic",
+    "Perception": "Perception",
+    "PersonalGrooming": "Personal Grooming",
+    "Persuasion": "Persuasion",
+    "PhotographyFilm": "Photography/Film",
+    "PickLock": "Pick Lock",
+    "PickPocket": "Pick Pocket",
+    "PilotAir": "Pilot Air Vehicle",
+    "PilotSea": "Pilot Sea Vehicle",
+    "PlayInstrument": "Play Instrument",
+    "ResistTortureDrugs": "Resist Torture/Drugs",
+    "Riding": "Riding",
+    "Science": "Science",
+    "SeaVehicleTech": "Sea Vehicle Tech",
+    "ShoulderArms": "Shoulder Arms",
+    "Stealth": "Stealth",
+    "Streetwise": "Streetwise",
+    "Surgery": "Surgery",
+    "Tactics": "Tactics",
+    "Tracking": "Tracking",
+    "Trading": "Trading",
+    "WardrobeAndStyle": "Wardrobe & Style",
+    "WeaponsTech": "Weaponstech",
+    "WildernessSurvival": "Wilderness Survival"
+}
+
+function updateSkillsV1(data, actor) {
+    return data.skill.map(async (skillData) => {
         const skillName = SKILL_TYPE_MAP[skillData.skill_type_id];
         const skillItem = actor.items.getName(skillName);
         if (skillItem) {
             await skillItem.update({ system: { level: skillData.points } });
         } else {
-            ui.notifications.warn(`Unable to find item for skill: ${skillName}`);
+            ui.notifications.warn(`Unable to find item to set level for skill: ${skillName}`);
         }
-    }));
+    });
+}
+
+const BLOCKED_SKILL_NAMES = ['MedicalTech', 'Surgery'];
+
+function updateSkillsV2(data, actor) {
+    return Object.entries(data.skills).map(async ([skillName, level]) => {
+        const skillItem = actor.items.getName(SKILL_NAME_MAP_V2[skillName]);
+        if (skillItem) {
+            await skillItem.update({ system: { level } });
+        } else if (!BLOCKED_SKILL_NAMES.includes(skillName)) {
+            ui.notifications.warn(`Unable to find item to set level for skill: ${skillName}`);
+        }
+    });
+}
+
+export async function updateSkills(data, actor, isV2) {
+    const skillUpdates = isV2 ? updateSkillsV2(data, actor) : updateSkillsV1(data, actor);
+    await Promise.all(skillUpdates);
 }

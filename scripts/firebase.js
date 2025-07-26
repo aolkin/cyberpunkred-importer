@@ -37,7 +37,11 @@ function parseFirebase(data) {
                 acc[key] = [];
             }
         } else if ('mapValue' in value) {
-            acc[key] = parseFirebase(value.mapValue.fields);
+            if (value.mapValue.fields) {
+                acc[key] = parseFirebase(value.mapValue.fields);
+            } else {
+                acc[key] = {};
+            }
         }
         return acc;
     }, isArray ? [] : {});

@@ -18,9 +18,23 @@ const CONTACT_RELATIONSHIP_TYPES = {
     2: "friends",
     3: "tragicLoveAffairs",
 }
+const CONTACT_RELATIONSHIP_MAPPING = {
+    "romance": "tragicLoveAffairs",
+    "enemy": "enemies",
+}
+
+function getRelationshipType(contact) {
+    if (contact.relationship) {
+        if (contact.relationship in CONTACT_RELATIONSHIP_MAPPING) {
+            return CONTACT_RELATIONSHIP_MAPPING[contact.relationship];
+        }
+        return CONTACT_RELATIONSHIP_TYPES[0];
+    }
+    return CONTACT_RELATIONSHIP_TYPES[contact.contact_type_id] || "friends";
+}
 
 export async function updateLifepath(data, actor) {
-    const identifyingFeatures = data.identifying_features.split("\n\n");
+    const identifyingFeatures = (data.identifying_features ?? data.identifyingFeatures).split("\n\n");
     const background = data.background.split("\n\n");
     const roleLifePath = [];
     const lifepath = [...identifyingFeatures, ...background].reduce((acc, item) => {
@@ -37,7 +51,8 @@ export async function updateLifepath(data, actor) {
     lifepath['personality'] = data.personality;
     lifepath['roleLifepath'] = roleLifePath.join("\n\n");
 
-    data.contact.forEach(contact => {
+    // V1 Data Model
+    (data.contact || Object.values(data.contacts)).forEach(contact => {
         let text = contact.name;
         if (contact.organization) {
             const position = contact.position ? ' - ' + contact.position : '';
@@ -46,11 +61,7 @@ export async function updateLifepath(data, actor) {
         if (contact.details) {
             text = `<b>${text}</b>\n` + contact.details;
         }
-        const relationshipType = CONTACT_RELATIONSHIP_TYPES[contact.contact_type_id]
-        if (!relationshipType) {
-            ui.notifications.warn(`Unknown relationship type (${contact.contact_type_id}) for ${contact.name}`);
-            return;
-        }
+        const relationshipType = getRelationshipType(contact);
         if (!lifepath[relationshipType]) {
             lifepath[relationshipType] = [];
         }
@@ -65,9 +76,9 @@ export async function updateLifepath(data, actor) {
     Object.keys(lifepath).forEach(key => lifepath[key] = (lifepath[key] ?? '').replaceAll('\n', '<br>'));
 
     const system = {};
-    if (data.character_type_id === 0) {
+    if (data.character_type_id === 0 || data.characterType === 'PlayerCharacter') {
         system.lifepath = lifepath;
-    } else if (data.character_type_id === 1) {
+    } else if (data.character_type_id === 1 || data.characterType === 'NPC') {
         const notes = Object.entries({
             'Personality': data.personality,
             'Motivation': data.motivation,
@@ -79,7 +90,7 @@ export async function updateLifepath(data, actor) {
             notes,
         };
     } else {
-        ui.notifications.warn(`Unknown character type (${data.character_type_id}) for ${data.name}`);
+        ui.notifications.warn(`Unknown character type (${data.character_type_id ?? data.characterType}) for ${data.name}`);
     }
 
     console.debug('Updating lifepath and name', lifepath);

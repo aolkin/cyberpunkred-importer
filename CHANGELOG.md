@@ -1,3 +1,11 @@
+v0.3.4
+=========
+
+- Started implementing support for the new data model from the app
+  update. Skills, stats, and lifepath will be imported now, but all
+  of the items such as gear, cyberware, weapons, ammo, and armor
+  will not be imported yet.
+
 v0.3.3
 =========
 
