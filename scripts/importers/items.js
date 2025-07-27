@@ -478,3 +478,7 @@ export async function importItems(data, actor) {
     }
     console.debug("Done installing cyberware");
 }
+
+export async function importItemsV2(data, actor) {
+
+}

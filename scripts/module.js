@@ -2,7 +2,7 @@ import { loadCharacter } from "./firebase.js";
 import { updateLifepath } from "./importers/lifepath.js"
 import { updateStats } from "./importers/stats.js"
 import { updateSkills } from "./importers/skills.js"
-import { importItems, loadItemDatabases } from "./importers/items.js"
+import { importItems, importItemsV2, loadItemDatabases } from "./importers/items.js"
 
 // Hooks.once('init', async function() {
 // });
@@ -50,6 +50,10 @@ function isUsingMookSheet(actor) {
 }
 
 let currentDialog;
+
+function isQuickInsertAvailable() {
+    return window.QuickInsert !== undefined
+}
 
 function startImport(sheet) {
     if (currentDialog !== undefined) {
@@ -100,11 +104,10 @@ function startImport(sheet) {
                         nameDisplay.text(`${characterType} to Import: ${characterData.name}`);
 
                         const importMessages = [];
-                        if (isV2Character(characterData)) {
+                        if (isV2Character(characterData) && !isQuickInsertAvailable()) {
                             importMessages.push('This character was exported from the updated app.' +
-                                ' This update uses a new data model for which support is still in' +
-                                ' development. Importing items such as clothing,' +
-                                ' weapons, cyberware, etc, is not yet supported.');
+                                ' Importing items such as gear, cyberware, weapons, etc, requires the' +
+                                ' Quick Insert module to be installed and enabled.');
                         }
                         if (isUsingMookSheet(sheet.object)) {
                             importMessages.push(
@@ -157,7 +160,13 @@ async function importCharacter(data, actor) {
         ui.notifications.info(`Importing skills for ${forWhom}.`);
         await updateSkills(data, actor, isV2);
         if (isV2) {
-            ui.notifications.warn("Clothing, gear, cyberware, etc imports not yet supported from new characters.")
+            if (isQuickInsertAvailable()) {
+                ui.notifications.info(`Importing items for ${forWhom}.`);
+                await importItemsV2(data, actor);
+            } else {
+                ui.notifications.warn("Items such as gear and cyberware were not imported." +
+                    " Install the Quick Insert module to import them.");
+            }
         } else {
             ui.notifications.info(`Importing items for ${forWhom}.`);
             await importItems(data, actor, isV2);

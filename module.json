@@ -26,7 +26,17 @@
         }
       }
     ],
-    "requires": []
+    "requires": [],
+    "recommends": [
+      {
+        "id": "quick-insert",
+        "type": "module",
+        "manifest": "https://gitlab.com/fvtt-modules-lab/quick-insert/-/jobs/artifacts/v2.8.7/raw/module.json?job=build-module",
+        "compatibility": {
+          "verified": "2.8.7"
+        }
+      }
+    ]
   },
   "system": ["cyberpunk-red-core"],
   "esmodules": [
