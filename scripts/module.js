@@ -52,7 +52,7 @@ function isUsingMookSheet(actor) {
 let currentDialog;
 
 function isQuickInsertAvailable() {
-    return window.QuickInsert !== undefined
+    return window.QuickInsert !== undefined;
 }
 
 function startImport(sheet) {
@@ -157,11 +157,15 @@ async function importCharacter(data, actor) {
 
     try {
         await updateLifepath(data, actor);
-        ui.notifications.info(`Importing skills for ${forWhom}.`);
-        await updateSkills(data, actor, isV2);
+        // ui.notifications.info(`Importing skills for ${forWhom}.`);
+        //await updateSkills(data, actor, isV2);
         if (isV2) {
             if (isQuickInsertAvailable()) {
                 ui.notifications.info(`Importing items for ${forWhom}.`);
+                if (!QuickInsert.hasIndex) {
+                    console.warn("Quick Insert index must be built before importing.");
+                    await QuickInsert.forceIndex();
+                }
                 await importItemsV2(data, actor);
             } else {
                 ui.notifications.warn("Items such as gear and cyberware were not imported." +
@@ -173,16 +177,20 @@ async function importCharacter(data, actor) {
         }
         // Do this last to overwrite humanity and empathy lost during cyberware installs
         await updateStats(data, actor, isV2);
+
+        if (isV2) {
+            ui.notifications.info(`Done importing character ${forWhom}. Cyberware must be manually installed.`);
+        } else {
+            ui.notifications.info(`Done importing character ${forWhom}. `
+                + 'Max Humanity and Empathy may need to be manually corrected.');
+        }
     } catch (e) {
         const errorMessage = `Failed to import ${forWhom}.`;
         ui.notifications.error(errorMessage);
         console.error(errorMessage, e);
+    } finally {
+        if (mustReconfigureSheetClass) {
+            await actor.update({ flags: { core: { sheetClass: originalSheetClass } } });
+        }
     }
-
-    if (mustReconfigureSheetClass) {
-        await actor.update({ flags: { core: { sheetClass: originalSheetClass } } });
-    }
-
-    ui.notifications.info(`Done importing character ${forWhom}. Max Humanity and Empathy may need
-     to be manually corrected.`);
 }

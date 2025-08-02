@@ -381,6 +381,20 @@ CLOTHING_STYLES.map((styleName, styleIndex) => {
     });
 });
 
+async function updateExistingItem(itemName, quantity, actor) {
+    const existingItem = actor.items.getName(itemName);
+    if (existingItem) {
+        if (quantity !== undefined) {
+            console.debug(`Updating existing ${itemName} to quantity x${quantity}`);
+            await existingItem.update({ system: { amount: quantity } });
+        } else {
+            console.debug(`Found existing ${itemName}, skipping...`);
+        }
+        return true;
+    }
+    return false;
+}
+
 async function importItemData(data, actor, databaseName, getItemName) {
     return await Promise.all(data[databaseName].map(async piece => {
         const itemName = getItemName(piece);
@@ -393,15 +407,9 @@ async function importItemData(data, actor, databaseName, getItemName) {
             databaseName = "cyberchairs";
         }
 
-        const existingItem = actor.items.getName(itemName);
-        if (existingItem) {
-            if (piece.quantity !== undefined) {
-                console.debug(`Updating existing ${itemName} to quantity x${piece.quantity}`);
-                await existingItem.update({ system: { amount: piece.quantity } });
-            } else {
-                console.debug(`Found existing ${itemName}, skipping...`);
-            }
-            return existingItem;
+        const existing = await updateExistingItem(itemName, piece.quantity, actor);
+        if (existing) {
+            return;
         }
 
         const data = databases[databaseName].getName(itemName);
@@ -479,6 +487,242 @@ export async function importItems(data, actor) {
     console.debug("Done installing cyberware");
 }
 
-export async function importItemsV2(data, actor) {
+const ITEMS_KEYS = [
+    "clothing", "armor", "gear", "programs", "weapons", "ammunition", "cyberware", "vehicles"
+];
 
+const AMMO_QUALIFIERS = [
+    "Acid",
+    "Arachnid",
+    "Basic",
+    "Biotoxin",
+    "Expansive",
+    "EMP",
+    "Flashbang",
+    "Incendiary",
+    "Poison",
+    "Rubber",
+    "Sleep",
+    "Smart",
+    "Smoke",
+    "Security",
+    "Teargas",
+]
+
+const MULTI_WORD_AMMO_QUALIFIERS = [
+    "Armor Piercing",
+    "Improved Smart",
+]
+
+const SINGULAR_CLOTHING_TYPES = [
+    "Hat",
+    "Top",
+]
+
+const CAMELCASE_FIXES = [
+    "Sov Oil",
+    "Kill Strom",
+    "Mod Fire",
+    "Gun Mart",
+    "Mecha Man",
+    "Ameri Car",
+    "Econo Compact",
+    "K Tech",
+    "Venture Ware",
+    "Slam Dance",
+]
+
+const MULTI_WORD_BRANDS = [
+    "constitution arms",
+    "tsunami arms",
+]
+
+const MULTI_WORD_REMOVE_BRAND_REGEX = new RegExp(`^(${MULTI_WORD_BRANDS.join("|")}) `, "i");
+
+const SINGULAR_CLOTHING_FIX_REGEX = new RegExp(`(${SINGULAR_CLOTHING_TYPES.join("|")})s`, "i");
+
+const CAMELCASE_FIX_REGEX = new RegExp(`(${CAMELCASE_FIXES.join("|")})`, "gi");
+
+function extractItemName(item) {
+    let itemName = item.type.replace(/([A-Z0-9])(?=[a-z0-9])/g, ' $1').trim()
+    if (itemName === "SelfICE") {
+        return "Self-ICE";
+    }
+    const camelCaseFix = itemName.matchAll(CAMELCASE_FIX_REGEX);
+    for (const fix of (camelCaseFix ?? [])) {
+        itemName = itemName.replace(fix[0], fix[0].replace(" ", ""));
+    }
+    // As a simple heuristic, if the item has a description it is probably a non-standard/exotic/branded
+    // item, which might be high or low quality without having that in the name.
+    if (item.quality && !item.description && item.quality !== "Standard") {
+        itemName += ` (${item.quality})`;
+    }
+    return itemName;
+}
+
+function normalizeItemName(itemName, itemType) {
+    if (itemType === "clothing") {
+        itemName = itemName.replace(SINGULAR_CLOTHING_FIX_REGEX, "$1");
+    }
+    if (itemType === "weapon" && itemName.endsWith(" Weapon")) {
+        if (!itemName.includes("Hurricane Assault"))
+        itemName = itemName.slice(0, -7);
+    }
+    if (itemType === "armor") {
+        if (itemName === "Bodyweight Suit Body") {
+            return "Bodyweight Suit";
+        }
+        itemName = itemName.replace(/ Helmet$/, " (Head)");
+    }
+    return itemName;
+}
+
+function normalizeAmmunitionQualifier(name) {
+    for (const qualifier of MULTI_WORD_AMMO_QUALIFIERS) {
+        if (name.startsWith(`${qualifier} `)) {
+            return name.slice(qualifier.length + 1) + ` (${qualifier})`;
+        }
+    }
+    const words = name.split(" ");
+    return words.slice(1).join(" ") + ` (${words[0]})`;
+}
+
+function removeBrand(normalized) {
+    if (MULTI_WORD_REMOVE_BRAND_REGEX.test(normalized)) {
+        return normalized.replace(MULTI_WORD_REMOVE_BRAND_REGEX, "");
+    }
+    return normalized.split(" ").slice(1).join(" ")
+}
+
+function isExactMatch(searchResult, targetName, itemType) {
+    const resultName = searchResult.toLowerCase().replace("-", " ");
+    const itemName = targetName.toLowerCase().replace("-", " ");
+    if (itemType === "armor" && resultName !== itemName) {
+        const normalizedItemName = itemName.replace(/ (armor|body)$/i, " (body)")
+        // console.debug(`Comparing ${resultName} to normalized armor ${normalizedItemName}`)
+        return resultName === normalizedItemName;
+    }
+    return resultName === itemName;
+}
+
+async function findItem(itemName, itemType, alreadyUnbranded = false) {
+    const normalized = normalizeItemName(itemName, itemType)
+    if (itemName !== normalized) {
+        // console.debug(`Normalized ${itemName} (${itemType}) to ${normalized}`);
+    }
+    const searchResults = QuickInsert.search(normalized)
+
+    const exactMatches = searchResults.filter(result => isExactMatch(result.item.name, normalized, itemType));
+
+    if (exactMatches.length === 1) {
+        return exactMatches[0].item;
+    } else if (exactMatches.length > 1) {
+        const matches = await Promise.all(exactMatches.map(async (result) =>
+            [result, await result.item.get()]));
+        const typeMatches = matches.filter(item => item[1].type === itemType);
+        if (typeMatches.length === 1) {
+            return typeMatches[0][0].item;
+        } else {
+            const worldMatches = matches.filter(item => item[1].pack == null);
+            if (worldMatches.length === 1) {
+                return worldMatches[0][0].item;
+            }
+            console.debug(`Unable to type-match exact matches for ${itemName} (${itemType}):`, matches);
+        }
+    }
+
+    if (alreadyUnbranded) {
+        // Since "unbranding" just removes the first word, it can be noisy, so just return and let
+        // the outer call try to handle it.
+        return;
+    }
+
+    if (itemType === "ammunition" && !normalized.includes("(")) {
+        let qualifiedAmmunition = normalizeAmmunitionQualifier(normalized)
+        // console.debug(`Adjusting ammunition qualifier from ${itemName} (${itemType}) to ${qualifiedAmmunition}`);
+        return await findItem(qualifiedAmmunition, itemType, alreadyUnbranded);
+    }
+
+    if (!alreadyUnbranded && searchResults.length === 0) {
+        const unbranded = removeBrand(normalized);
+        if (unbranded !== "" && unbranded !== normalized) {
+            // console.debug(`Attempting to remove brand from ${itemName} (${itemType}) to ${unbranded}.`);
+            const unbrandedResult = await findItem(unbranded, itemType, true);
+            if (unbrandedResult) {
+                return unbrandedResult;
+            }
+        }
+        console.debug(`Unable to find ${itemName} (${itemType}) in Foundry.`);
+    }
+
+    // searchResults.sort((a, b) => {
+    //     return a.match[0].indices.length - b.match[0].indices.length;
+    // });
+    // const bestMatchQuality = searchResults[0].match[0].indices.length;
+    // const bestMatches = searchResults.filter(result => result.match[0].indices.length === bestMatchQuality);
+    //
+    // console.debug(`No exact matches for ${itemName} (${itemType}),` +
+    //     ` found next best matches with ${bestMatchQuality} indices:`, bestMatches);
+
+    function openSearchDialogue(resolve, reject, retries = 0) {
+        if (!(QuickInsert.app._state === -1 || QuickInsert.app._state === 0)) {
+            if (retries > 20) {
+                reject("Unable to open Quick Insert after 2 seconds.");
+            }
+            setTimeout(() => openSearchDialogue(resolve, reject, retries + 1), 100);
+            return;
+        }
+        try {
+            QuickInsert.open({
+                classes: ["cpr-character-importer-quick-insert-item"],
+                startText: normalized,
+                allowMultiple: false,
+                restrictTypes: ["Item"],
+                onSubmit: (item) => {
+                    console.debug(`Resolving ${item.name}`);
+                    resolve(item);
+                },
+                onClose: () => {
+                    console.debug("Resolving undefined");
+                    resolve(undefined);
+                }
+            });
+        } catch (e) {
+            reject(e);
+        }
+    }
+
+    return new Promise((resolve, reject) => {
+        openSearchDialogue(resolve, reject)
+    });
+}
+
+export async function importItemsV2(data, actor) {
+    const missingItems = [];
+    for (const itemType of ITEMS_KEYS) {
+        for (const item of Object.values(data[itemType] ?? {})) {
+            const itemName = extractItemName(item)
+            const systemItem = await findItem(
+                itemName,
+                itemType.replace(/s$/, "")
+            );
+            if (systemItem) {
+                // console.info(`Found or selected ${itemName} (${itemType}):`, systemItem);
+                const quantity = item.quantity
+                const existing = await updateExistingItem(systemItem.name, quantity, actor);
+                if (!existing) {
+                    console.debug(`Importing ${itemName} x${quantity}`, item);
+                    const itemData = await systemItem.get();
+                    if (quantity !== undefined) {
+                        itemData.system.amount = quantity;
+                    }
+                    await actor.createEmbeddedDocuments("Item", [itemData]);
+                }
+            } else {
+                missingItems.push(itemName);
+            }
+        }
+    }
+    ui.notifications.error("The following items were skipped during import: "
+        + missingItems.join(", "));
 }

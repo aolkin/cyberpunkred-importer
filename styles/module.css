@@ -13,3 +13,10 @@
 .character-import-name.invalid-code {
     color: darkred;
 }
+
+.cpr-character-importer-quick-insert-item::after {
+    font-size: 1.3rem;
+    content: "Ambiguous item to import, please select the correct one (or press escape to skip):";
+    background-color: #ddd;
+    padding: 0.3em;
+}
