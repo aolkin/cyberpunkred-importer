@@ -20,19 +20,22 @@ Capabilities:
 - Import stats
 - Import skill levels
 - Import lifepath
-- Import items such as clothing, gear, weapons, armor, and ammo
-- Import and install cybergear (the importer will pop up the installation
-  prompt for each item)
+- Import items such as clothing, gear, cyberware, vehicles, weapons, armor, and ammo
 - Import NPCs to Mook Actors. This should be considered mostly functional now,
   but note that the importer will override the Mook sheet class to the player
   Character sheet class during the import, then restore it afterwards, to
   workaround a limitation in the CPR system implementation.
 
+In order to find items to import from the compendiums, this module now has a recommended
+dependency on the [Quick Insert module](https://foundryvtt.com/packages/quick-insert).
+The importer will still function without this dependency, but it will not attempt to
+import any items.
+
+With the Quick Insert module enabled, the importer will attempt to find items silently,
+and will pop up the Quick Insert menu if a precise match cannot be found, allowing you
+to search for and select an item manually or choose to skip it.
+
 Issues:
-- Only content from the core rulebook is supported, no DLC will be recognized.
-  Because the DLC content is paywalled and not part of the website, I cannot
-  add the appropriate identifiers to this module to recognize that content
-  without the help of the developer of the app.
 - No custom skills or items will be imported at this time.
 - Lifepath importing involves a lot of string parsing, so it relies on not
   having modified the structure of the lifepath text box on cyberpunkred.com.

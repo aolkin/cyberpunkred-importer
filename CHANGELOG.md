@@ -1,3 +1,15 @@
+v0.4.0
+=========
+
+- Add support for importing items such as gear, cyberware, weapons, etc.
+  This support leverages the Quick Insert module to search for relevant
+  items in the compendiums. While this does introduce an (optional)
+  dependency, it also means that any kind of item can be imported,
+  including from the DLC and other non-core content.
+- Automatic cyberware installation is not handled for these new characters.
+  It was always a bit glitchy, so I decided it wasn't worth updating. The
+  cyberware will still be added to inventory, but must be installed manually.
+
 v0.3.4
 =========
 

@@ -491,6 +491,7 @@ const ITEMS_KEYS = [
     "clothing", "armor", "gear", "programs", "weapons", "ammunition", "cyberware", "vehicles"
 ];
 
+// Unused
 const AMMO_QUALIFIERS = [
     "Acid",
     "Arachnid",
@@ -723,6 +724,8 @@ export async function importItemsV2(data, actor) {
             }
         }
     }
-    ui.notifications.error("The following items were skipped during import: "
-        + missingItems.join(", "));
+    if (missingItems.length > 0) {
+        ui.notifications.error("The following items were skipped during import: "
+            + missingItems.join(", "));
+    }
 }

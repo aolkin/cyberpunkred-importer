@@ -157,8 +157,8 @@ async function importCharacter(data, actor) {
 
     try {
         await updateLifepath(data, actor);
-        // ui.notifications.info(`Importing skills for ${forWhom}.`);
-        //await updateSkills(data, actor, isV2);
+        ui.notifications.info(`Importing skills for ${forWhom}.`);
+        await updateSkills(data, actor, isV2);
         if (isV2) {
             if (isQuickInsertAvailable()) {
                 ui.notifications.info(`Importing items for ${forWhom}.`);
@@ -179,7 +179,11 @@ async function importCharacter(data, actor) {
         await updateStats(data, actor, isV2);
 
         if (isV2) {
-            ui.notifications.info(`Done importing character ${forWhom}. Cyberware must be manually installed.`);
+            if (isQuickInsertAvailable()) {
+                ui.notifications.info(`Done importing character ${forWhom}. Cyberware must be manually installed.`);
+            } else {
+                ui.notifications.info(`Done importing character ${forWhom}. Gear and cyberware were not imported.`);
+            }
         } else {
             ui.notifications.info(`Done importing character ${forWhom}. `
                 + 'Max Humanity and Empathy may need to be manually corrected.');
