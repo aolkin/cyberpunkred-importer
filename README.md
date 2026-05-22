@@ -1,8 +1,6 @@
-![](https://img.shields.io/badge/Foundry-v11-informational)
+![](https://img.shields.io/badge/Foundry-v11-informational) ![](https://img.shields.io/badge/Foundry-v12-informational)
 <!--- Downloads @ Latest Badge -->
 ![Latest Release Download Count](https://img.shields.io/github/downloads/aolkin/cyberpunkred-importer/latest/module.zip)
-<!--- Forge Bazaar Install % Badge -->
-![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fcyberpunkred-importer&colorB=4aa94a)
 
 # Cyberpunk RED Importer
 
@@ -17,6 +15,7 @@ paste in the six digit code received from the "Export" functionality on
 cyberpunkred.com.
 
 Capabilities:
+
 - Import stats
 - Import skill levels
 - Import lifepath
@@ -36,6 +35,7 @@ and will pop up the Quick Insert menu if a precise match cannot be found, allowi
 to search for and select an item manually or choose to skip it.
 
 Issues:
+
 - No custom skills or items will be imported at this time.
 - Lifepath importing involves a lot of string parsing, so it relies on not
   having modified the structure of the lifepath text box on cyberpunkred.com.

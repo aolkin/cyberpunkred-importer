@@ -1,22 +1,79 @@
-.character-import-text {
-    min-height: 5em;
-    margin-bottom: 1em;
+.character-import {
+        width: 100%;
+        max-width: 520px;
+        padding: 0.2em 1.2em 1.2em 1.2em;
+
+        display: flex;
+        flex-direction: column;
+        gap: 0.75em;
 }
 
+/* Label */
+.character-import-label {
+        font-size: 0.85rem;
+        color: #cfcfcf;
+        letter-spacing: 0.02em;
+}
+
+/* Input */
+.character-import-code {
+        width: 100%;
+        padding: 0.65em 0.75em;
+
+        background: #121212;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+
+        color: #fff;
+        font-size: 0.9rem;
+
+        outline: none;
+        transition: border 0.15s ease, box-shadow 0.15s ease;
+
+        text-transform: uppercase;
+}
+
+.character-import-code:focus {
+        border-color: #5a7cff;
+        box-shadow: 0 0 0 2px rgba(90, 124, 255, 0.2);
+}
+
+/* Output block */
+.character-import-text {
+        min-height: 3.5em;
+        padding: 0.5em 0.75em;
+
+        background: #151515;
+        border: 1px dashed #333;
+        border-radius: 6px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.25em;
+}
+
+/* Name */
+.character-import-name {
+        font-size: 0.9rem;
+        color: #e6e6e6;
+}
+
+/* Message (error/info) */
 .character-import-message {
-    font-size: 0.8rem;
-    font-style: italic;
-    text-align: center;
-    color: darkred;
+        font-size: 0.8rem;
+        font-style: italic;
+        text-align: left;
+
+        color: #ff6b6b;
+}
+
+/* Error state hook */
+.character-import-text.is-error {
+        border-color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.05);
 }
 
 .character-import-name.invalid-code {
-    color: darkred;
-}
-
-.cpr-character-importer-quick-insert-item::after {
-    font-size: 1.3rem;
-    content: "Ambiguous item to import, please select the correct one (or press escape to skip):";
-    background-color: #ddd;
-    padding: 0.3em;
+        color: #ff6b6b;
 }
