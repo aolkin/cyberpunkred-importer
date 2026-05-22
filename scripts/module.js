@@ -1,208 +1,357 @@
 import {loadCharacter} from "./firebase.js";
-import {updateLifepath} from "./importers/lifepath.js"
-import {updateStats} from "./importers/stats.js"
-import {updateSkills} from "./importers/skills.js"
-import {importItems, importItemsV2, loadItemDatabases} from "./importers/items.js"
 
-// Hooks.once('init', async function() {
-// });
+import {updateLifepath} from "./importers/lifepath.js";
+import {updateStats} from "./importers/stats.js";
+import {updateSkills} from "./importers/skills.js";
+
+import {importItems, importItemsV2, loadItemDatabases} from "./importers/items.js";
 
 const CHARACTER_TYPE_MAP = {
         0: 'Character',
         1: 'NPC',
 }
 
-function isV2Character(character) {
-        return character.version === 2
-}
+let currentDialog;
 
-function getCharacterType(character) {
-        if (isV2Character(character)) {
-                return character.characterType;
-        }
-        return CHARACTER_TYPE_MAP[character.character_type_id];
-}
-
-Hooks.once('ready', async function () {
+/* -------------------------------------------- */
+/*  Hooks                                       */
+/* -------------------------------------------- */
+Hooks.once("ready", async () => {
         await loadItemDatabases();
 });
+
+Hooks.on("getActorSheetHeaderButtons", getActorSheetHeaderButtons);
+
+/* -------------------------------------------- */
+/*  Header Button                               */
+/* -------------------------------------------- */
 
 /**
  * @param {ActorSheet} sheet
  * @param {ApplicationHeaderButton[]} buttons
  */
 function getActorSheetHeaderButtons(sheet, buttons) {
-        if (!game.user.can('FILES_UPLOAD')) return
+        if (!game.user.can("FILES_UPLOAD")) return;
+
         buttons.unshift({
-                label: game.i18n.localize('CPRImporter.Dialog.ImportButton'),
-                icon: 'fas fa-cloud-download-alt',
-                class: 'aolkin-cyberpunkred-importer',
-                onclick: () => startImport(sheet),
-        })
+                label: game.i18n.localize("CPRImporter.Dialog.ImportButton"),
+                icon: "fa-solid fa-cloud-arrow-down",
+                class: "aolkin-cyberpunkred-importer",
+                onclick: () => startImport(sheet)
+        });
 }
 
-Hooks.on('getActorSheetHeaderButtons', getActorSheetHeaderButtons)
+/* -------------------------------------------- */
+/*  Helpers                                     */
+/* -------------------------------------------- */
 
-function isUsingMookSheet(actor) {
-        const currentSheetClass = actor?.flags?.core?.sheetClass ||
-                game.settings.get("core", "sheetClasses")?.Actor?.[actor.type];
-        return currentSheetClass === 'cyberpunk-red-core.CPRMookActorSheet';
+function isV2Character(character) {
+        return character.version === 2;
 }
 
-let currentDialog;
+function getCharacterType(character) {
+        if (isV2Character(character)) {
+                return character.characterType;
+        }
+
+        return game.i18n.localize(CHARACTER_TYPE_MAP[character.character_type_id]);
+}
 
 function isQuickInsertAvailable() {
         return window.QuickInsert !== undefined;
 }
 
-function startImport(sheet) {
-        if (currentDialog !== undefined) {
-                currentDialog.close();
-        }
-        const newDialog = new Dialog({
-                title: game.i18n.localize('CPRImporter.Dialog.Title'),
-                content: `
-        <div class="character-import">
-                <label class="character-import-label">
-                        ${game.i18n.localize('CPRImporter.Dialog.Label')}
-                </label>
-                <input class="character-import-code" type="text" placeholder="${game.i18n.localize('CPRImporter.Dialog.Placeholder')}"/>
-                <div class="character-import-text">
-                        <div class="character-import-name">&nbsp;</div>
-                        <div class="character-import-message">&nbsp;</div>
-                </div>
-        </div>`,
-                buttons: {
-                        import: {
-                                icon: '<i class="fas fa-cloud-download-alt"></i>',
-                                label: game.i18n.localize('CPRImporter.Dialog.ImportButton'),
-                                callback: async (html) => {
-                                        const data = html.find('button').data('characterData')
-                                        if (!data) return;
-                                        await importCharacter(data, sheet.object)
-                                }
-                        }
-                },
-                close: html => {
-                        if (currentDialog === newDialog) {
-                                currentDialog = undefined;
-                        }
-                },
-                render: html => {
-                        const button = html.find('button');
-                        const nameDisplay = html.find('.character-import-name')
-                        button.prop('disabled', true);
+function isUsingMookSheet(actor) {
+        const currentSheetClass = actor?.flags?.core?.sheetClass ||
+                game.settings.get("core", "sheetClasses")?.Actor?.[actor.type];
 
-                        let lastCode = '';
-                        html.find('.character-import-code').on('keyup change', async (e) => {
-                                const code = e.target.value.toUpperCase();
-
-                                if (code === lastCode) return;
-                                lastCode = code;
-
-                                if (/[A-Z0-9]{6}/.test(code)) {
-                                        nameDisplay.text(game.i18n.localize('CPRImporter.Status.Loading'));
-                                        nameDisplay.removeClass('invalid-code');
-                                        try {
-                                                const characterData = await loadCharacter(code);
-                                                button.data('characterData', characterData);
-                                                button.prop('disabled', false);
-                                                const characterType = getCharacterType(characterData);
-                                                nameDisplay.text(game.i18n.format(
-                                                        'CPRImporter.Import.CharacterToImport',
-                                                        {
-                                                                type: characterType,
-                                                                name: characterData.name
-                                                        }
-                                                ));
-
-                                                const importMessages = [];
-                                                if (isV2Character(characterData) && !isQuickInsertAvailable()) {
-                                                        importMessages.push(game.i18n.localize('CPRImporter.Messages.QuickInsertRequired'));
-                                                }
-                                                if (isUsingMookSheet(sheet.object)) {
-                                                        importMessages.push(game.i18n.localize('CPRImporter.Messages.MookSheetWarning'));
-                                                }
-                                                html.find('.character-import-message').html(
-                                                        importMessages.length > 0 ? importMessages.join('<br>') : '&nbsp;');
-                                        } catch (e) {
-                                                console.error(e);
-                                                nameDisplay.text(e);
-                                                nameDisplay.addClass('invalid-code');
-                                                button.prop('disabled', true);
-                                        }
-                                } else {
-                                        button.prop('disabled', true);
-                                        if (code.length > 0) {
-                                                nameDisplay.text(game.i18n.localize('CPRImporter.Status.InvalidCode'));
-                                                nameDisplay.addClass('invalid-code');
-                                        } else {
-                                                nameDisplay.text('');
-                                        }
-                                }
-                        })
-                }
-        });
-        currentDialog = newDialog;
-        newDialog.render(true);
+        return currentSheetClass === 'cyberpunk-red-core.CPRMookActorSheet';
 }
 
+/* -------------------------------------------- */
+/*  Dialog                                      */
+/* -------------------------------------------- */
+
+function startImport(sheet) {
+        currentDialog?.close();
+
+        const dialog = new Dialog({
+                title: game.i18n.localize(
+                        "CPRImporter.Dialog.Title"
+                ),
+                // language=HTML
+                content: `
+                        <div class="character-import">
+                                <label class="character-import-label">
+                                        ${game.i18n.localize("CPRImporter.Dialog.Label")}
+                                </label>
+                                <input
+                                        class="character-import-code"
+                                        type="text"
+                                        placeholder="${game.i18n.localize("CPRImporter.Dialog.Placeholder")}"
+                                />
+
+                                <div class="character-import-text">
+                                        <div class="character-import-name"></div>
+                                        <div class="character-import-message"></div>
+                                </div>
+                        </div>`,
+
+                buttons: {
+                        import: {
+                                icon: '<i class="fa-solid fa-cloud-arrow-down"></i>',
+                                label: game.i18n.localize("CPRImporter.Dialog.ImportButton"),
+
+                                callback: async () => {
+                                        if (!dialog.characterData) return;
+
+                                        await importCharacter(
+                                                dialog.characterData,
+                                                sheet.actor
+                                        );
+                                }
+                        }
+                },
+
+                default: "import",
+
+                close: () => {
+                        if (currentDialog === dialog) {
+                                currentDialog = undefined;
+                        }
+                }
+        });
+
+        currentDialog = dialog;
+        dialog.render(true);
+
+        Hooks.once("renderDialog", (_dialog, html) => {
+                if (_dialog !== dialog) return;
+                const root = html[0];
+
+                const input = root.querySelector(
+                        ".character-import-code"
+                );
+
+                const nameDisplay = root.querySelector(
+                        ".character-import-name"
+                );
+
+                const messageDisplay = root.querySelector(
+                        ".character-import-message"
+                );
+
+                const importButton = root.querySelector(
+                        "[data-button='import']"
+                );
+
+                importButton.disabled = true;
+                let lastCode = "";
+
+                input.addEventListener("input", async (event) => {
+                        const code = event.target.value
+                                .toUpperCase()
+                                .trim();
+
+                        event.target.value = code;
+
+                        if (code === lastCode) return;
+                        lastCode = code;
+
+                        if (!/^[A-Z0-9]{6}$/.test(code)) {
+                                importButton.disabled = true;
+
+                                if (code.length > 0) {
+                                        nameDisplay.textContent = game.i18n.localize("CPRImporter.Status.InvalidCode");
+                                        nameDisplay.classList.add("invalid-code");
+                                } else {
+                                        nameDisplay.textContent = "";
+                                }
+
+                                messageDisplay.innerHTML = "";
+                                return;
+                        }
+
+                        try {
+                                nameDisplay.textContent = game.i18n.localize("CPRImporter.Status.Loading");
+
+                                nameDisplay.classList.remove(
+                                        "invalid-code"
+                                );
+
+                                const characterData = await loadCharacter(code);
+                                dialog.characterData = characterData;
+                                importButton.disabled = false;
+                                const characterType = getCharacterType(characterData);
+                                nameDisplay.textContent =
+                                        game.i18n.format(
+                                                "CPRImporter.Import.CharacterToImport",
+                                                {
+                                                        type: characterType,
+                                                        name: characterData.name
+                                                }
+                                        );
+
+                                const importMessages = [];
+
+                                if (isV2Character(characterData) && !isQuickInsertAvailable()) {
+                                        importMessages.push(
+                                                game.i18n.localize("CPRImporter.Messages.QuickInsertRequired")
+                                        );
+                                }
+
+                                if (isUsingMookSheet(sheet.actor)) {
+                                        importMessages.push(
+                                                game.i18n.localize("CPRImporter.Messages.MookSheetWarning")
+                                        );
+                                }
+
+                                messageDisplay.innerHTML =
+                                        importMessages.length > 0
+                                                ? importMessages.join("<br>")
+                                                : "";
+
+                        } catch (error) {
+                                console.error(error);
+
+                                importButton.disabled = true;
+
+                                nameDisplay.textContent =
+                                        error.message ?? String(error);
+
+                                nameDisplay.classList.add(
+                                        "invalid-code"
+                                );
+                        }
+                });
+        });
+}
+
+/* -------------------------------------------- */
+/*  Import */
+/* -------------------------------------------- */
+
 async function importCharacter(data, actor) {
-        if (actor.type !== 'character' && actor.type !== 'mook') {
-                throw new Error('Can only import to characters and mooks');
+        if (
+                actor.type !== "character"
+                && actor.type !== "mook"
+        ) {
+                throw new Error(
+                        "Can only import to characters and mooks"
+                );
         }
-        console.info('Importing character', data, 'to actor', actor);
 
-        const originalSheetClass = actor?.flags?.core?.sheetClass ?? '';
-        const mustReconfigureSheetClass = isUsingMookSheet(actor);
+        console.info(
+                "Importing character",
+                data,
+                "to actor",
+                actor
+        );
+
+        const originalSheetClass =
+                actor.getFlag("core", "sheetClass") ?? "";
+
+        const mustReconfigureSheetClass =
+                isUsingMookSheet(actor);
+
         if (mustReconfigureSheetClass) {
-                console.warn(`Temporarily configuring ${actor} to use the Player Character sheet during import.`);
-                await actor.update({flags: {core: {sheetClass: 'cyberpunk-red-core.CPRCharacterActorSheet'}}});
+                console.warn(
+                        `Temporarily configuring ${actor.name} `
+                        + "to use the Player Character sheet during import."
+                );
+
+                await actor.setFlag(
+                        "core",
+                        "sheetClass",
+                        "cyberpunk-red-core.CPRCharacterActorSheet"
+                );
         }
 
-        const forWhom = `${data.name} from ${data.code_to_character}`;
+        const forWhom =
+                `${data.name} from ${data.code_to_character}`;
+
         const isV2 = isV2Character(data);
 
         try {
                 await updateLifepath(data, actor);
-                ui.notifications.info(`Importing skills for ${forWhom}.`);
+
+                ui.notifications.info(
+                        `Importing skills for ${forWhom}.`
+                );
+
                 await updateSkills(data, actor, isV2);
+
                 if (isV2) {
                         if (isQuickInsertAvailable()) {
-                                ui.notifications.info(`Importing items for ${forWhom}.`);
+                                ui.notifications.info(
+                                        `Importing items for ${forWhom}.`
+                                );
+
                                 if (!QuickInsert.hasIndex) {
-                                        console.warn("Quick Insert index must be built before importing.");
+                                        console.warn(
+                                                "Quick Insert index must be built before importing."
+                                        );
+
                                         await QuickInsert.forceIndex();
                                 }
+
                                 await importItemsV2(data, actor);
+
                         } else {
-                                ui.notifications.warn("Items such as gear and cyberware were not imported." +
-                                        " Install the Quick Insert module to import them.");
+                                ui.notifications.warn(
+                                        "Items such as gear and cyberware "
+                                        + "were not imported. Install the "
+                                        + "Quick Insert module to import them."
+                                );
                         }
+
                 } else {
-                        ui.notifications.info(`Importing items for ${forWhom}.`);
+                        ui.notifications.info(
+                                `Importing items for ${forWhom}.`
+                        );
+
                         await importItems(data, actor, isV2);
                 }
-                // Do this last to overwrite humanity and empathy lost during cyberware installs
+
                 await updateStats(data, actor, isV2);
 
                 if (isV2) {
                         if (isQuickInsertAvailable()) {
-                                ui.notifications.info(`Done importing character ${forWhom}. Cyberware must be manually installed.`);
+                                ui.notifications.info(
+                                        `Done importing character ${forWhom}. `
+                                        + "Cyberware must be manually installed."
+                                );
+
                         } else {
-                                ui.notifications.info(`Done importing character ${forWhom}. Gear and cyberware were not imported.`);
+                                ui.notifications.info(
+                                        `Done importing character ${forWhom}. `
+                                        + "Gear and cyberware were not imported."
+                                );
                         }
+
                 } else {
-                        ui.notifications.info(`Done importing character ${forWhom}. `
-                                + 'Max Humanity and Empathy may need to be manually corrected.');
+                        ui.notifications.info(
+                                `Done importing character ${forWhom}. `
+                                + "Max Humanity and Empathy may need "
+                                + "to be manually corrected."
+                        );
                 }
-        } catch (e) {
-                const errorMessage = `Failed to import ${forWhom}.`;
+
+        } catch (error) {
+                const errorMessage =
+                        `Failed to import ${forWhom}.`;
+
                 ui.notifications.error(errorMessage);
-                console.error(errorMessage, e);
+
+                console.error(errorMessage, error);
+
         } finally {
                 if (mustReconfigureSheetClass) {
-                        await actor.update({flags: {core: {sheetClass: originalSheetClass}}});
+                        await actor.setFlag(
+                                "core",
+                                "sheetClass",
+                                originalSheetClass
+                        );
                 }
         }
 }
