@@ -2,7 +2,7 @@
   "id": "cyberpunkred-importer",
   "title": "Cyberpunk RED Importer",
   "description": "Import character data from cyberpunkred.com",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "library": "false",
   "compatibility": {
     "minimum": 12,
@@ -52,6 +52,10 @@
       "lang": "en",
       "name": "English",
       "path": "languages/en.json"
+    },  {
+      "lang": "ru",
+      "name": "Russian",
+      "path": "languages/ru.json"
     }
   ],
   "url": "https://github.com/aolkin/cyberpunkred-importer",

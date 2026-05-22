@@ -1,3 +1,9 @@
+v0.4.3
+=========
+
+- Added proper localization
+- Added `ru` lang
+
 v0.4.1
 =========
 
