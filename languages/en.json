@@ -11,7 +11,7 @@
       "InvalidCode": "Invalid code"
     },
     "Messages": {
-      "QuickInsertRequired": "This character was exported from the updated app. Importing items such as gear, cyberware, weapons, etc, requires the Quick Insert module to be installed and enabled.",
+      "QuickInsertRequired": "Importing items such as gear, cyberware, weapons, etc, requires the Quick Insert module to be installed and enabled.",
       "MookSheetWarning": "This actor is currently using the Mook sheet. In order to import successfully, this actor will be temporarily set to use the player character sheet during the import process then restored at the end."
     },
     "Import": {

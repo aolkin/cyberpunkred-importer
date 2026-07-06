@@ -78,7 +78,7 @@ v0.2.1
 v.0.2.0
 ==========
 
-Initial "full" version  - supporting for most of the content on the web app:
+Initial "full" version - supporting for most of the content on the web app:
 
 - Skills and Stats
 - Lifepath
@@ -89,7 +89,8 @@ Initial "full" version  - supporting for most of the content on the web app:
 - Armor
 - Cyberware (will prompt you to install it during the import process as well)
 
-Notably, nothing related to roles is supported. There are also a variety of edge cases and a few individual items in some categories that may not be successfully imported.
+Notably, nothing related to roles is supported. There are also a variety of edge cases and a few individual items in
+some categories that may not be successfully imported.
 
 v0.1.1
 ==========
