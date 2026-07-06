@@ -29,8 +29,7 @@
         }
       }
     ],
-    "requires": [],
-    "recommends": [
+    "requires": [
       {
         "id": "quick-insert",
         "type": "module",
@@ -39,7 +38,8 @@
           "verified": "3.7.1"
         }
       }
-    ]
+    ],
+    "recommends": []
   },
   "esmodules": [
     "scripts/module.js"
