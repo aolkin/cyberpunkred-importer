@@ -1,3 +1,14 @@
+v0.5.1
+=========
+
+- Fixed multiple import of cyberware
+
+v0.5.0
+=========
+
+- Localized import
+- Fixed multiple import of items
+
 v0.4.3
 =========
 

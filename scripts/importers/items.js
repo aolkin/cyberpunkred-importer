@@ -224,6 +224,18 @@ function isStackableItemData(itemData) {
         && Object.hasOwn(itemData.system, "amount");
 }
 
+function createNonStackableImportTracker() {
+    return {
+        created: new Map(),
+        existing: new Map(),
+        requested: new Map(),
+    };
+}
+
+function getItemCountKey(itemData, fallbackName) {
+    return `${itemData?.type ?? ""}:${normalizeLocalizationKey(itemData?.name ?? fallbackName)}`;
+}
+
 function duplicateItemData(itemData) {
     return foundry.utils.deepClone?.(itemData) ?? foundry.utils.duplicate(itemData);
 }
@@ -292,6 +304,31 @@ async function getMissingQuantityAfterExistingItems(itemNames, quantity, actor, 
         console.debug(`Found ${existingItems.length} existing ${itemNames[0]}, skipping...`);
     }
     return missingQuantity;
+}
+
+async function getMissingNonStackableQuantity(itemNames, quantity, actor, itemData, tracker) {
+    const countKey = getItemCountKey(itemData, itemNames[0]);
+    if (!tracker.existing.has(countKey)) {
+        const existingItems = findExistingItems(itemNames, actor, itemData.type);
+        await Promise.all(existingItems.map(item => sanitizeExistingItemName(item)));
+        tracker.existing.set(countKey, existingItems.length);
+    }
+
+    const requestedQuantity = getRequestedQuantity(quantity);
+    const cumulativeRequested = (tracker.requested.get(countKey) ?? 0) + requestedQuantity;
+    tracker.requested.set(countKey, cumulativeRequested);
+
+    const existingQuantity = tracker.existing.get(countKey) ?? 0;
+    const createdQuantity = tracker.created.get(countKey) ?? 0;
+    const missingQuantity = Math.max(0, cumulativeRequested - existingQuantity - createdQuantity);
+    if (missingQuantity === 0 && existingQuantity + createdQuantity > 0) {
+        console.debug(`Found ${existingQuantity + createdQuantity} existing ${itemNames[0]}, skipping...`);
+    }
+    return {countKey, missingQuantity};
+}
+
+function trackCreatedNonStackableQuantity(tracker, countKey, createdQuantity) {
+    tracker.created.set(countKey, (tracker.created.get(countKey) ?? 0) + createdQuantity);
 }
 
 function isTechUpgradeItemName(itemName) {
@@ -535,6 +572,7 @@ function getItemDataFromDocument(itemDocument) {
 
 export async function importItems(data, actor) {
     const missingItems = [];
+    const nonStackableTracker = createNonStackableImportTracker();
     for (const itemType of ITEMS_KEYS) {
         for (const item of Object.values(data[itemType] ?? {})) {
             const itemName = extractItemName(item);
@@ -554,16 +592,34 @@ export async function importItems(data, actor) {
                     itemData
                 );
                 itemNames.push(systemItem.name);
-                const missingQuantity = await getMissingQuantityAfterExistingItems(
-                    getItemNameCandidates(itemNames, itemData),
-                    quantity,
-                    actor,
-                    itemData
-                );
+                const itemNameCandidates = getItemNameCandidates(itemNames, itemData);
+                let countKey;
+                let missingQuantity;
+                if (isStackableItemData(itemData)) {
+                    missingQuantity = await getMissingQuantityAfterExistingItems(
+                        itemNameCandidates,
+                        quantity,
+                        actor,
+                        itemData
+                    );
+                } else {
+                    const missing = await getMissingNonStackableQuantity(
+                        itemNameCandidates,
+                        quantity,
+                        actor,
+                        itemData,
+                        nonStackableTracker
+                    );
+                    countKey = missing.countKey;
+                    missingQuantity = missing.missingQuantity;
+                }
                 if (missingQuantity > 0) {
                     console.debug(`Importing ${itemName} x${quantity}`, item);
                     const itemDataList = getItemDataListForImport(itemData, quantity, missingQuantity);
                     await actor.createEmbeddedDocuments("Item", itemDataList);
+                    if (countKey) {
+                        trackCreatedNonStackableQuantity(nonStackableTracker, countKey, itemDataList.length);
+                    }
                 }
             } else {
                 missingItems.push(itemName);
