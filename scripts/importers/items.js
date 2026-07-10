@@ -1,6 +1,11 @@
-const CORE_SYSTEM_ID = "cyberpunk-red-core";
+import {
+    getLocalizedItemNameVariants as getTranslatedItemNameVariants,
+    namesMatch,
+    normalizeLocalizationKey,
+    stripTrademarkSymbols
+} from "./translations.js";
 
-const babeleTranslationCache = new Map();
+const CORE_SYSTEM_ID = "cyberpunk-red-core";
 
 const ITEMS_KEYS = [
     "clothing",
@@ -54,20 +59,6 @@ const SINGULAR_CLOTHING_FIX_REGEX = new RegExp(`(${SINGULAR_CLOTHING_TYPES.join(
 const TECH_UPGRADE_SUFFIX_REGEX = /\s*T\s*Up(?:\s*\d+|\s+[A-Za-z0-9]+)*$/i;
 const QUALITY_SUFFIX_REGEX = / \((Poor|Excellent)\)$/;
 
-function getCurrentLanguage() {
-    return game.i18n?.lang ?? game.settings?.get("core", "language") ?? "en";
-}
-
-function getBabeleLanguages() {
-    const language = getCurrentLanguage();
-    if (!language) {
-        return ["en"];
-    }
-
-    const baseLanguage = language.split("-")[0];
-    return [...new Set([language, baseLanguage, "en"])];
-}
-
 function getPackId(pack) {
     return pack.collection ?? pack.metadata?.id ?? `${CORE_SYSTEM_ID}.${pack.metadata?.name}`;
 }
@@ -92,104 +83,6 @@ function getSystemItemPackNames() {
     return [...new Set(getSystemItemPacks()
         .map(pack => getPackName(pack))
         .filter(packName => packName))];
-}
-
-function stripTrademarkSymbols(itemName) {
-    return itemName.replace(/[®™©]/g, "");
-}
-
-function normalizeLocalizationKey(itemName) {
-    return stripTrademarkSymbols(itemName)
-        .toLowerCase()
-        .replace(/[-\u2010-\u2015/]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-}
-
-function getLocalizationKeys(itemName) {
-    const normalized = normalizeLocalizationKey(itemName);
-    return [...new Set([
-        itemName,
-        stripTrademarkSymbols(itemName),
-        normalized,
-        normalized.replace(/\s/g, "")
-    ])];
-}
-
-function addTranslationVariant(translations, key, value) {
-    if (!value) {
-        return;
-    }
-
-    const values = translations.get(key) ?? [];
-    if (!values.includes(value)) {
-        values.push(value);
-    }
-    translations.set(key, values);
-}
-
-async function fetchBabeleTranslationFile(language, packName) {
-    const translationPath = `systems/${CORE_SYSTEM_ID}/babele/${language}/${CORE_SYSTEM_ID}.${packName}.json`;
-    try {
-        const response = await fetch(translationPath);
-        if (!response.ok) {
-            return;
-        }
-        return await response.json();
-    } catch (error) {
-        console.debug(`Unable to load ${translationPath}`, error);
-        return;
-    }
-}
-
-async function getBabeleTranslations(packName) {
-    const cacheKey = `${getCurrentLanguage()}:${packName}`;
-    if (babeleTranslationCache.has(cacheKey)) {
-        return babeleTranslationCache.get(cacheKey);
-    }
-
-    const translations = new Map();
-    for (const language of getBabeleLanguages()) {
-        const translationData = await fetchBabeleTranslationFile(language, packName);
-        for (const [englishName, entry] of Object.entries(translationData?.entries ?? {})) {
-            const translatedNames = [englishName, entry?.name];
-            for (const key of getLocalizationKeys(englishName)) {
-                for (const name of translatedNames) {
-                    addTranslationVariant(translations, key, name);
-                }
-            }
-        }
-    }
-
-    babeleTranslationCache.set(cacheKey, translations);
-    return translations;
-}
-
-async function getLocalizedItemNameVariants(itemName, packNames = getSystemItemPackNames()) {
-    const sourceNames = [...new Set([
-        itemName,
-        itemName.replace(QUALITY_SUFFIX_REGEX, "")
-    ])];
-    const itemNames = [...sourceNames];
-    const lookupKeys = sourceNames.flatMap(name => getLocalizationKeys(name));
-    const packTranslations = await Promise.all(packNames.map(packName => getBabeleTranslations(packName)));
-
-    for (const translations of packTranslations) {
-        for (const key of lookupKeys) {
-            for (const translatedName of translations.get(key) ?? []) {
-                if (!itemNames.includes(translatedName)) {
-                    itemNames.push(translatedName);
-                }
-            }
-        }
-    }
-
-    return itemNames;
-}
-
-function namesMatch(name, targetName) {
-    const targetKeys = new Set(getLocalizationKeys(targetName));
-    return getLocalizationKeys(name).some(key => targetKeys.has(key));
 }
 
 function getItemNameCandidates(itemNames, itemData) {
@@ -486,7 +379,10 @@ async function findItem(itemName, itemType, alreadyUnbranded = false) {
         // console.debug(`Normalized ${itemName} (${itemType}) to ${normalized}`);
     }
 
-    const searchNames = await getLocalizedItemNameVariants(normalized);
+    const searchNames = await getTranslatedItemNameVariants([
+        normalized,
+        normalized.replace(QUALITY_SUFFIX_REGEX, "")
+    ], getSystemItemPackNames());
     const searches = [];
     for (const searchName of searchNames) {
         const search = await searchQuickInsert(searchName, itemType, itemName);
@@ -588,7 +484,10 @@ export async function importItems(data, actor) {
                 const itemDocument = await systemItem.get();
                 const itemData = getItemDataFromDocument(itemDocument);
                 const itemNames = getItemNameCandidates(
-                    await getLocalizedItemNameVariants(normalizedItemName),
+                    await getTranslatedItemNameVariants([
+                        normalizedItemName,
+                        normalizedItemName.replace(QUALITY_SUFFIX_REGEX, "")
+                    ], getSystemItemPackNames()),
                     itemData
                 );
                 itemNames.push(systemItem.name);

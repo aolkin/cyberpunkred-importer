@@ -3,6 +3,8 @@ import {loadCharacter} from "./firebase.js";
 import {updateLifepath} from "./importers/lifepath.js";
 import {updateStats} from "./importers/stats.js";
 import {updateSkills} from "./importers/skills.js";
+import {updateRoles} from "./importers/roles.js";
+import {updateMoney} from "./importers/money.js";
 
 import {importItems} from "./importers/items.js";
 
@@ -273,10 +275,22 @@ async function importCharacter(data, actor) {
         await updateLifepath(data, actor);
 
         ui.notifications.info(
+            `Importing roles for ${forWhom}.`
+        );
+
+        await updateRoles(data, actor);
+
+        ui.notifications.info(
             `Importing skills for ${forWhom}.`
         );
 
         await updateSkills(data, actor, isV2);
+
+        ui.notifications.info(
+            `Importing money for ${forWhom}.`
+        );
+
+        await updateMoney(data, actor);
 
         if (isQuickInsertAvailable()) {
             ui.notifications.info(

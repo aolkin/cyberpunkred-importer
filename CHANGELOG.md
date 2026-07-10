@@ -1,3 +1,10 @@
+v0.6.0
+=========
+
+- Fixed skills import
+- Added role import
+- Added eddies import
+
 v0.5.1
 =========
 
