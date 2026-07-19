@@ -46,6 +46,19 @@ const SINGULAR_CLOTHING_TYPES = [
     "Top",
 ]
 
+const CYBERWARE_COVERING_NAMES = {
+    "plastic covering arms": "Plastic Covering (Cyber Arm)",
+    "plastic covering legs": "Plastic Covering (Cyber Leg)",
+    "realskinn covering arms": "Realskinn Covering (Cyber Arm)",
+    "realskinn covering legs": "Realskinn Covering (Cyber Leg)",
+    "sponsored covering arms": "Sponsored Covering (Cyberarm)",
+    "sponsored covering legs": "Sponsored Covering (Cyberleg)",
+    "superchrome covering arms": "Superchrome® Covering (Cyber Arm)",
+    "superchrome covering legs": "Superchrome® Covering (Cyber Leg)",
+    "superchrome® covering arms": "Superchrome® Covering (Cyber Arm)",
+    "superchrome® covering legs": "Superchrome® Covering (Cyber Leg)",
+};
+
 const STACKABLE_ITEM_TYPES = new Set([
     "ammo",
     "clothing",
@@ -255,6 +268,7 @@ function normalizeItemName(itemName, itemType) {
     }
     if (itemType === "gear") {
         itemName = itemName.replace(/^(Scrambler|Descrambler|Scrambler Descrambler)$/, "Scrambler/Descrambler");
+        itemName = itemName.replace(/^Carryall Bag$/i, "Carryall");
         itemName = itemName.replace(/^(Poor|Excellent) Quality Cyberdeck$/i, "Cyberdeck ($1)");
         itemName = itemName.replace(/^Linear Frame (Sigma|∑)$/i, "Linear Frame ∑ (Sigma)");
         itemName = itemName.replace(/^Linear Frame (Beta|β)$/i, "Linear Frame β (Beta)");
@@ -263,6 +277,7 @@ function normalizeItemName(itemName, itemType) {
         }
     }
     if (itemType === "cyberware") {
+        itemName = CYBERWARE_COVERING_NAMES[itemName.toLowerCase()] ?? itemName;
         itemName = itemName.replace(/^(Scrambler|Descrambler|Scrambler Descrambler)$/, "Scrambler/Descrambler");
         itemName = itemName.replace(/^Audio Vox$/, "AudioVox");
         itemName = itemName.replace(/^Low Light (Infrared\s*UV|IR\s*UV|IRUV)$/i, "Low Light/IR/UV");
