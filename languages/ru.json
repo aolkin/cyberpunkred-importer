@@ -16,6 +16,9 @@
     },
     "Import": {
       "CharacterToImport": "{type} для импорта: {name}"
+    },
+    "Notes": {
+      "RoleLifepath": "Ролевой жизненный путь"
     }
   }
 }

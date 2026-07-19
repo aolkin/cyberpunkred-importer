@@ -16,6 +16,9 @@
     },
     "Import": {
       "CharacterToImport": "{type} to Import: {name}"
+    },
+    "Notes": {
+      "RoleLifepath": "Role Lifepath"
     }
   }
 }

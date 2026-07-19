@@ -282,14 +282,13 @@ async function importCharacter(data, actor) {
         ui.notifications.info(
             `Importing roles for ${forWhom}.`
         );
-
         await updateRoles(data, actor);
 
         ui.notifications.info(
             `Importing skills for ${forWhom}.`
         );
-
         await updateSkills(data, actor, isV2);
+        await updateStats(data, actor, isV2);
 
         ui.notifications.info(
             `Importing money for ${forWhom}.`
@@ -319,8 +318,6 @@ async function importCharacter(data, actor) {
             );
         }
 
-        await updateStats(data, actor, isV2);
-
         if (isQuickInsertAvailable()) {
             ui.notifications.info(
                 `Done importing character ${forWhom}. `
@@ -332,7 +329,6 @@ async function importCharacter(data, actor) {
                 + "Gear and cyberware were not imported."
             );
         }
-
     } catch (error) {
         const errorMessage =
             `Failed to import ${forWhom}.`;

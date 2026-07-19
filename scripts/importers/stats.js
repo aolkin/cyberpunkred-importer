@@ -44,7 +44,7 @@ export async function updateStats(data, actor, isV2) {
 
     const derivedStats = {
         hp: {value: data.health, max: data.health},
-        humanity: {value: data.humanity, max: data.humanity}
+        humanity: {value: stats.emp.value * 10, max: stats.emp.value * 10}
     };
 
     console.debug('Updating stats', stats, derivedStats);

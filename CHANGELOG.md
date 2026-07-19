@@ -1,3 +1,14 @@
+v0.6.2
+=========
+
+- Humanity sets as max for Empathy
+- Lifepath import improvements
+
+  v0.6.1
+  =========
+
+- Restrict Import only for Character and Mook sheets
+
 v0.6.0
 =========
 

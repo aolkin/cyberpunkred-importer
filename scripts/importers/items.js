@@ -255,6 +255,7 @@ function normalizeItemName(itemName, itemType) {
     }
     if (itemType === "gear") {
         itemName = itemName.replace(/^(Scrambler|Descrambler|Scrambler Descrambler)$/, "Scrambler/Descrambler");
+        itemName = itemName.replace(/^(Poor|Excellent) Quality Cyberdeck$/i, "Cyberdeck ($1)");
         itemName = itemName.replace(/^Linear Frame (Sigma|∑)$/i, "Linear Frame ∑ (Sigma)");
         itemName = itemName.replace(/^Linear Frame (Beta|β)$/i, "Linear Frame β (Beta)");
         if (itemName === "Militech Tactical Umbrella") {
@@ -280,12 +281,13 @@ function normalizeItemName(itemName, itemType) {
             return "Compact Groundcar";
         }
     }
-    if (itemType === "weapon" && itemName.endsWith(" Weapon")) {
+    if (itemType === "weapon" && / Weapon(?: \((?:Poor|Excellent)\))?$/.test(itemName)) {
         if (!itemName.includes("Hurricane Assault")) {
-            itemName = itemName.slice(0, -7);
+            itemName = itemName.replace(/ Weapon(?= \((?:Poor|Excellent)\)$|$)/, "");
         }
     }
     if (itemType === "weapon") {
+        itemName = itemName.replace(/^(Poor|Excellent) Quality (.+)$/i, "$2 ($1)");
         itemName = itemName.replace(/^Bows(?= \(|$)/, "Bow");
         itemName = itemName.replace(/^Constitution Arms /, "Constitutional Arms ");
         itemName = itemName.replace(/^Railgun(?= \(|$)/, "Rhinemetall EMG-86 Railgun");
