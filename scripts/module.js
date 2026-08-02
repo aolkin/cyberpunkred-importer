@@ -320,8 +320,7 @@ async function importCharacter(data, actor) {
 
         if (isQuickInsertAvailable()) {
             ui.notifications.info(
-                `Done importing character ${forWhom}. `
-                + "Cyberware must be manually installed."
+                `Done importing character ${forWhom}.`
             );
         } else {
             ui.notifications.info(

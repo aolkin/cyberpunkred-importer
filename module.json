@@ -2,7 +2,7 @@
   "id": "cyberpunkred-importer",
   "title": "Cyberpunk RED Importer",
   "description": "Import character data from cyberpunkred.com",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "library": "false",
   "compatibility": {
     "minimum": 12,

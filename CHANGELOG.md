@@ -1,3 +1,8 @@
+v0.7.0
+=========
+
+- Embedded cyberware import
+
 v0.6.3
 =========
 

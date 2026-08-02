@@ -483,8 +483,73 @@ function getItemDataFromDocument(itemDocument) {
         : duplicateItemData(itemDocument);
 }
 
+function getCyberwareEmbedTargets(actor, cyberware) {
+    const foundationalCyberware = actor.itemTypes.cyberware.filter(item =>
+        item.system.isInstalled
+        && item.system.isFoundational
+        && item.system.type === cyberware.system.type
+    );
+    const targets = [];
+    const queuedIds = foundationalCyberware.flatMap(item => item.system.installedItems.list);
+    const visitedIds = new Set();
+
+    for (const item of foundationalCyberware) {
+        if (
+            item.system.installedItems.allowed
+            && item.system.installedItems.allowedTypes.includes(cyberware.type)
+            && item.availableInstallSlots() >= cyberware.system.size
+        ) {
+            targets.push(item);
+        }
+    }
+
+    while (queuedIds.length > 0) {
+        const itemId = queuedIds.shift();
+        if (visitedIds.has(itemId)) {
+            continue;
+        }
+        visitedIds.add(itemId);
+
+        const item = actor.getOwnedItem(itemId);
+        if (!item?.system.installedItems) {
+            continue;
+        }
+        queuedIds.push(...item.system.installedItems.list);
+
+        if (
+            item.system.installedItems.allowed
+            && item.system.installedItems.allowedTypes.includes(cyberware.type)
+            && item.availableInstallSlots() >= cyberware.system.size
+        ) {
+            targets.push(item);
+        }
+    }
+
+    return targets;
+}
+
+async function embedImportedCyberware(actor, cyberware) {
+    const uninstalledCyberware = cyberware.filter(item => !item.system.isInstalled);
+    const foundationalCyberware = uninstalledCyberware.filter(item => item.system.isFoundational);
+    const optionalCyberware = uninstalledCyberware.filter(item => !item.system.isFoundational);
+
+    for (const item of foundationalCyberware) {
+        await actor.installItems([item]);
+    }
+
+    for (const item of optionalCyberware) {
+        const target = getCyberwareEmbedTargets(actor, item)[0];
+        if (target) {
+            await target.installItems([item]);
+        } else {
+            ui.notifications.warn(`Unable to embed ${item.name}: no compatible foundational cyberware has free slots.`);
+        }
+    }
+}
+
 export async function importItems(data, actor) {
     const missingItems = [];
+    const importedCyberware = [];
     const nonStackableTracker = createNonStackableImportTracker();
     for (const itemType of ITEMS_KEYS) {
         for (const item of Object.values(data[itemType] ?? {})) {
@@ -532,7 +597,10 @@ export async function importItems(data, actor) {
                 if (missingQuantity > 0) {
                     console.debug(`Importing ${itemName} x${quantity}`, item);
                     const itemDataList = getItemDataListForImport(itemData, quantity, missingQuantity);
-                    await actor.createEmbeddedDocuments("Item", itemDataList);
+                    const createdItems = await actor.createEmbeddedDocuments("Item", itemDataList);
+                    if (importItemType === "cyberware") {
+                        importedCyberware.push(...createdItems);
+                    }
                     if (countKey) {
                         trackCreatedNonStackableQuantity(nonStackableTracker, countKey, itemDataList.length);
                     }
@@ -542,6 +610,7 @@ export async function importItems(data, actor) {
             }
         }
     }
+    await embedImportedCyberware(actor, importedCyberware);
     if (missingItems.length > 0) {
         ui.notifications.error("The following items were skipped during import: "
             + missingItems.join(", "));
