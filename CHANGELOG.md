@@ -1,3 +1,9 @@
+v0.8.0
+=========
+
+- Reputation import
+- Combat numbers import
+
 v0.7.0
 =========
 
