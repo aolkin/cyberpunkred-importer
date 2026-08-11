@@ -1,3 +1,54 @@
+v0.8.0
+=========
+
+- Reputation import
+- Combat numbers import
+
+v0.7.0
+=========
+
+- Embedded cyberware import
+
+v0.6.3
+=========
+
+- Coverings import
+
+v0.6.2
+=========
+
+- Humanity sets as max for Empathy
+- Lifepath import improvements
+
+v0.6.1
+=========
+
+- Restrict Import only for Character and Mook sheets
+
+v0.6.0
+=========
+
+- Fixed skills import
+- Added role import
+- Added eddies import
+
+v0.5.1
+=========
+
+- Fixed multiple import of cyberware
+
+v0.5.0
+=========
+
+- Localized import
+- Fixed multiple import of items
+
+v0.4.3
+=========
+
+- Added proper localization
+- Added `ru` lang
+
 v0.4.1
 =========
 
@@ -72,7 +123,7 @@ v0.2.1
 v.0.2.0
 ==========
 
-Initial "full" version  - supporting for most of the content on the web app:
+Initial "full" version - supporting for most of the content on the web app:
 
 - Skills and Stats
 - Lifepath
@@ -83,7 +134,8 @@ Initial "full" version  - supporting for most of the content on the web app:
 - Armor
 - Cyberware (will prompt you to install it during the import process as well)
 
-Notably, nothing related to roles is supported. There are also a variety of edge cases and a few individual items in some categories that may not be successfully imported.
+Notably, nothing related to roles is supported. There are also a variety of edge cases and a few individual items in
+some categories that may not be successfully imported.
 
 v0.1.1
 ==========

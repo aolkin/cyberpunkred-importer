@@ -1,14 +1,5 @@
 const STAT_TYPE_MAP = {
-    0: 'int',
-    1: 'ref',
-    2: 'dex',
-    3: 'tech',
-    4: 'cool',
-    5: 'will',
-    6: 'luck',
-    7: 'move',
-    8: 'body',
-    9: 'emp',
+    0: 'int', 1: 'ref', 2: 'dex', 3: 'tech', 4: 'cool', 5: 'will', 6: 'luck', 7: 'move', 8: 'body', 9: 'emp',
 }
 
 const STAT_NAME_MAP = {
@@ -17,6 +8,7 @@ const STAT_NAME_MAP = {
     "Dexterity": "dex",
     "Technique": "tech",
     "Cool": "cool",
+    "Combat": "combat",
     "Willpower": "will",
     "Luck": "luck",
     "Movement": "move",
@@ -29,26 +21,45 @@ function getStatsV1(data) {
 }
 
 function getStatsV2(data) {
-    return Object.entries(data.stats).map(([statName, points]) =>
-        [STAT_NAME_MAP[statName], points])
+    return Object.entries(data.stats).map(([statName, points]) => [STAT_NAME_MAP[statName], points])
 }
 
 export async function updateStats(data, actor, isV2) {
-    const stats = (isV2 ? getStatsV2(data) : getStatsV1(data)).reduce((acc, [statName, value]) => {
-        acc[statName] = { value };
-        if (actor.system.stats[statName].max) {
+    let stats = actor.system.stats;
+    for (var stat in stats) {
+        stats[stat].value = 0;
+        if (stats[stat].max !== undefined) stats[stat].max = 0;
+    }
+
+    await actor.update({
+        system: {stats},
+    });
+
+    stats = (isV2 ? getStatsV2(data) : getStatsV1(data)).reduce((acc, [statName, value]) => {
+        acc[statName] = {value};
+        if (actor.system.stats[statName]?.max !== undefined) {
             acc[statName].max = value;
         }
         return acc;
     }, {});
 
-    const derivedStats = {
-        hp: { value: data.health, max: data.health },
-        humanity: { value: data.humanity, max: data.humanity }
-    };
+    let derivedStats = {};
+    if (stats.emp !== undefined) {
+        derivedStats = {
+            hp: {value: data.health, max: data.health},
+            humanity: {value: stats.emp.value * 10, max: stats.emp.value * 10}
+        };
+    } else {
+        derivedStats = {
+            hp: {value: data.health, max: data.health},
+            humanity: {value: data.humanity, max: data.humanity}
+        };
+    }
+
+    const reputation = {value: data.reputation};
 
     console.debug('Updating stats', stats, derivedStats);
     await actor.update({
-        system: { derivedStats, stats },
+        system: {derivedStats, stats, reputation},
     });
 }
